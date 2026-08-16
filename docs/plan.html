@@ -1,0 +1,738 @@
+<title>Unnayan Core Banking Plan</title>
+
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────
+     Palette derived from the subject: an accounting ledger.
+     Ground is greenbar paper (green-biased neutral, not warm cream).
+     Ink-blue is the record; red ink is reserved strictly for
+     exceptions and corrections, exactly as in a hand-kept khata. */
+
+  :root {
+    --ground:      #F1F3EF;
+    --surface:     #FAFBF8;
+    --surface-alt: #E9ECE6;
+    --ink:         #161A20;
+    --ink-soft:    #4C5563;
+    --ink-faint:   #79828E;
+    --rule:        #D2D7CE;
+    --rule-strong: #B4BBB0;
+    --accent:      #26407C;
+    --accent-soft: #E2E7F1;
+    --red:         #93202F;
+    --red-soft:    #F5E3E4;
+    --green:       #2C6650;
+    --green-soft:  #E0EBE4;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    --measure: 66ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #10131A;
+      --surface:     #171B23;
+      --surface-alt: #1E232C;
+      --ink:         #E4E7E3;
+      --ink-soft:    #A2ACB8;
+      --ink-faint:   #737D89;
+      --rule:        #2A303A;
+      --rule-strong: #3C444F;
+      --accent:      #8FA8DE;
+      --accent-soft: #1C2438;
+      --red:         #E0808D;
+      --red-soft:    #33191E;
+      --green:       #6FB795;
+      --green-soft:  #16261F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #10131A;
+    --surface:     #171B23;
+    --surface-alt: #1E232C;
+    --ink:         #E4E7E3;
+    --ink-soft:    #A2ACB8;
+    --ink-faint:   #737D89;
+    --rule:        #2A303A;
+    --rule-strong: #3C444F;
+    --accent:      #8FA8DE;
+    --accent-soft: #1C2438;
+    --red:         #E0808D;
+    --red-soft:    #33191E;
+    --green:       #6FB795;
+    --green-soft:  #16261F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 clamp(1rem, 5vw, 4rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 74rem; margin: 0 auto; }
+
+  /* ── Masthead ──────────────────────────────────────────────── */
+
+  header.masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: clamp(3rem, 8vw, 5.5rem) 0 1.75rem;
+    margin-bottom: 3.5rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1.5rem;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6.5vw, 4rem);
+    line-height: 1.06;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 1.25rem;
+    max-width: 20ch;
+  }
+
+  .standfirst {
+    font-family: var(--serif);
+    font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 54ch;
+    margin: 0;
+  }
+
+  .masthead-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-top: 2.25rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  /* ── Sections ──────────────────────────────────────────────── */
+
+  section { margin-bottom: 4.5rem; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-top: 1px solid var(--rule-strong);
+    padding-top: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--red);
+    letter-spacing: 0.08em;
+    flex: none;
+    padding-top: 0.35rem;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3.4vw, 2.05rem);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: 0.005em;
+    margin: 2.25rem 0 0.6rem;
+    color: var(--ink);
+  }
+
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 1.15rem; }
+  ul, ol { margin: 0 0 1.15rem; padding-left: 1.35rem; }
+  li { margin-bottom: 0.45rem; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  strong { font-weight: 650; }
+  code { font-family: var(--mono); font-size: 0.855em; background: var(--surface-alt); padding: 0.1em 0.36em; border-radius: 3px; }
+
+  .lede {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 56ch;
+  }
+
+  /* ── The thesis panel ──────────────────────────────────────── */
+
+  .thesis {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-left: 3px solid var(--accent);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    margin: 0 0 2rem;
+  }
+
+  .thesis p:last-child { margin-bottom: 0; }
+
+  .thesis .big {
+    font-family: var(--serif);
+    font-size: clamp(1.35rem, 3.2vw, 1.9rem);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin-bottom: 1.15rem;
+    max-width: 30ch;
+  }
+
+  /* ── Ledger strip: the append-only idea, shown ─────────────── */
+
+  .ledger {
+    border: 1px solid var(--rule-strong);
+    background: var(--surface);
+    margin: 2rem 0;
+    overflow-x: auto;
+  }
+
+  .ledger table { border-collapse: collapse; width: 100%; min-width: 42rem; }
+
+  .ledger caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-alt);
+  }
+
+  .ledger th {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: left;
+    font-weight: 500;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  .ledger td {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 0.62rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ledger tr:last-child td { border-bottom: none; }
+  .num { text-align: right; }
+  .cr { color: var(--green); }
+  .dr { color: var(--red); }
+  .muted-cell { color: var(--ink-faint); }
+
+  /* ── General data tables ───────────────────────────────────── */
+
+  .table-scroll { overflow-x: auto; margin: 1.75rem 0; border: 1px solid var(--rule-strong); background: var(--surface); }
+  .table-scroll table { border-collapse: collapse; width: 100%; min-width: 34rem; }
+  .table-scroll th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-faint);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--rule-strong);
+    background: var(--surface-alt);
+  }
+  .table-scroll td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.92rem;
+    vertical-align: top;
+  }
+  .table-scroll tr:last-child td { border-bottom: none; }
+  .table-scroll td:first-child { font-weight: 600; }
+
+  /* ── Problem cards ─────────────────────────────────────────── */
+
+  .problems { display: grid; gap: 1px; background: var(--rule-strong); border: 1px solid var(--rule-strong); margin: 2rem 0; }
+  @media (min-width: 46rem) { .problems { grid-template-columns: 1fr 1fr; } }
+
+  .problem { background: var(--surface); padding: 1.5rem 1.6rem; }
+  .problem .tag {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .problem h4 { font-size: 1.02rem; font-weight: 650; margin: 0 0 0.55rem; line-height: 1.35; }
+  .problem p { font-size: 0.93rem; color: var(--ink-soft); margin: 0; max-width: none; }
+
+  /* ── Evidence callout ──────────────────────────────────────── */
+
+  .evidence {
+    background: var(--red-soft);
+    border-left: 3px solid var(--red);
+    padding: 1.15rem 1.4rem;
+    margin: 1.75rem 0;
+    max-width: var(--measure);
+  }
+  .evidence p { margin: 0; font-size: 0.94rem; }
+  .evidence .label {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .keep {
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    padding: 1.15rem 1.4rem;
+    margin: 1.75rem 0;
+    max-width: var(--measure);
+  }
+  .keep p { margin: 0; font-size: 0.94rem; }
+  .keep .label {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--green);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ── Transformation diagram ────────────────────────────────── */
+
+  .transform { margin: 2.25rem 0; overflow-x: auto; }
+  .transform svg { display: block; min-width: 40rem; width: 100%; height: auto; }
+
+  /* ── Phase timeline ────────────────────────────────────────── */
+
+  .phases { list-style: none; padding: 0; margin: 2rem 0; max-width: none; border-top: 1px solid var(--rule); }
+  .phase {
+    display: grid;
+    gap: 0.25rem 1.5rem;
+    padding: 1.15rem 0;
+    border-bottom: 1px solid var(--rule);
+    margin: 0;
+  }
+  @media (min-width: 44rem) {
+    .phase { grid-template-columns: 4.5rem 1fr 9rem; align-items: baseline; }
+  }
+  .phase-id { font-family: var(--mono); font-size: 0.72rem; color: var(--red); letter-spacing: 0.08em; }
+  .phase-name { font-weight: 650; font-size: 1rem; }
+  .phase-name span { display: block; font-weight: 400; font-size: 0.9rem; color: var(--ink-soft); margin-top: 0.15rem; }
+  .phase-dur { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ── Questions ─────────────────────────────────────────────── */
+
+  .questions { counter-reset: q; list-style: none; padding: 0; max-width: var(--measure); }
+  .questions li {
+    counter-increment: q;
+    position: relative;
+    padding-left: 2.4rem;
+    margin-bottom: 1.15rem;
+  }
+  .questions li::before {
+    content: counter(q, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--red);
+  }
+  .questions strong { display: block; }
+
+  footer {
+    border-top: 2px solid var(--ink);
+    padding-top: 1.5rem;
+    margin-top: 5rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    justify-content: space-between;
+  }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Unnayan Nidhi · System conversion plan</p>
+  <h1>From thirteen spreadsheets to one ledger</h1>
+  <p class="standfirst">A plan for replacing the Google Sheets operation with a web-based core banking system — without ever putting a member's balance at risk.</p>
+  <div class="masthead-meta">
+    <span>Planning stage · no code written</span>
+    <span>Read from the live Drive folder, 16 Aug 2026</span>
+    <span>~208 members · 110 columns · 11 officers</span>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2>What runs the business today</h2>
+  </div>
+
+  <p class="lede">Thirteen live spreadsheets. One master, eleven per-officer collection workspaces, and a three-megabyte collection abstract. Officers work in their own file, and the data is merged back to master by hand.</p>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>File</th><th>Size</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>UNNAYAN_CORE_MASTER</td><td>1.6 MB</td><td>The book of record — one row per customer, 110 columns</td></tr>
+        <tr><td>Collection_Abstract</td><td>3.0 MB</td><td>The largest file in the system — collection history</td></tr>
+        <tr><td>11 × *_Collection_Workspace</td><td>~230–410 KB each</td><td>One forked workspace per officer: GS, CS, RS, MS, KM, CD, RG, SDS, S2, S3, AG</td></tr>
+        <tr><td>6 × "Copy of ... backup"</td><td>various</td><td>Dated manual snapshots, Feb–Apr 2026 — serving as version control</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Those six backup copies are the most revealing thing in the folder, because of what they mean rather than what they contain. <strong>Manual dated copies are what a system produces when it has no transaction log and no undo.</strong> You take a snapshot before a risky merge because if the merge goes wrong there is no other way back.</p>
+
+  <p>The last one is named <code>Copy of UNNAYAN_CORE_MASTER for DB</code>. The intent to move to a database is already there. This is the route.</p>
+
+  <div class="keep">
+    <span class="label">Worth saying plainly</span>
+    <p>The domain logic in that master sheet is genuinely good — arrears ageing, overdue-interest capping with grace days and discounts, NPA classification, a two-axis credit grade with consistency percentages. <strong>None of it is being discarded.</strong> The problem is not the thinking. It is that a spreadsheet cannot enforce the thinking, cannot hold more than one loan per member, and cannot tell you who took the cash.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2>Five problems that are already costing money</h2>
+  </div>
+
+  <div class="problems">
+    <div class="problem">
+      <span class="tag">Structural</span>
+      <h4>One row cannot hold one customer's real life</h4>
+      <p>A row has exactly one loan account number, one deposit account number, one FD. It cannot represent a second concurrent loan, a deposit closed in 2023 and reopened in 2025, or a member who leaves and rejoins.</p>
+    </div>
+    <div class="problem">
+      <span class="tag">Integrity</span>
+      <h4>Balances are formulas, not facts</h4>
+      <p>There is no underlying list of individual payments that a balance is computed from and can be re-added against. If a figure is wrong, the only fix is to overwrite it — the one operation that leaves no trace.</p>
+    </div>
+    <div class="problem">
+      <span class="tag">Concurrency</span>
+      <h4>Eleven workspaces are eleven forks</h4>
+      <p>Bringing them back to master is a manual merge, with three silent failure modes: a lost update, a double-post, or a workspace that quietly stops matching and is not noticed for weeks.</p>
+    </div>
+    <div class="problem">
+      <span class="tag">Accountability</span>
+      <h4>No identity, so no audit</h4>
+      <p>A <code>User Email</code> column is not authentication. Sheets history tells you a cell changed — not that ₹250 was accepted from a named member by officer GS at 10:47 on the doorstep.</p>
+    </div>
+    <div class="problem">
+      <span class="tag">Data quality</span>
+      <h4>Nothing is validated on entry</h4>
+      <p>The officer field carries values like <code>RS, NPA</code>, <code>GS.</code>, <code>CD, CS</code> and <code>MS Close</code> — officer, status and stray punctuation sharing one ungated field. Every report built on it has to guess.</p>
+    </div>
+    <div class="problem">
+      <span class="tag">Consequence</span>
+      <h4>True exposure per member is invisible</h4>
+      <p>The workarounds are visible in the live data: a customer recorded as <code>TARAK KUNDU 1</code> is a human being cut in half so a second account could get its own row. For a lender, that is the most expensive kind of blindness.</p>
+    </div>
+  </div>
+
+  <div class="evidence">
+    <span class="label">From the live file timestamps</span>
+    <p>On 16 August 2026, six workspaces were modified between 19:31 and 19:42 while master was last touched at 18:39. At that moment master was stale against six different files simultaneously. That is the normal operating state, not an anomaly. Separately, the <code>RG</code>, <code>MS</code>, <code>S2</code> and <code>S3</code> workspaces have not been modified since May–June 2026 — either those officers are inactive, or their work has not reached master in months.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2>The one decision everything follows from</h2>
+  </div>
+
+  <div class="thesis">
+    <p class="big">Stop storing balances. Store every rupee that moves, and derive the balance from that.</p>
+    <p>Today a deposit balance is a number in a cell. In the new system there is no such cell. There is an append-only list of every transaction, and the balance is the sum of that list. When a member asks why their balance is ₹5,990, the system answers with the forty-seven receipts that add up to it.</p>
+  </div>
+
+  <p>This single change dissolves most of the five problems at once:</p>
+
+  <ul>
+    <li><strong>Merge conflicts stop existing.</strong> Two officers posting collections are two <em>inserts</em>. Inserts never conflict; only overwrites do.</li>
+    <li><strong>The dated backup copies become unnecessary</strong>, because nothing is ever overwritten and any past state is a query with a date filter.</li>
+    <li><strong>Audit becomes free</strong> rather than a feature bolted on — the log <em>is</em> the audit trail.</li>
+    <li><strong>Double-posting becomes impossible</strong>, because each entry carries a client-generated idempotency key and the second insert of the same key is rejected.</li>
+  </ul>
+
+  <div class="ledger">
+    <table>
+      <caption>What a correction looks like when nothing is ever edited</caption>
+      <thead>
+        <tr>
+          <th>Receipt</th><th>Date</th><th>Account</th><th>Type</th>
+          <th class="num">Amount</th><th>Collected by</th><th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>R-004812</td><td>12/08/26</td><td>201110622-0003</td><td>deposit_instalment</td>
+          <td class="num cr">+520.00</td><td>GS</td><td class="muted-cell">keyed in error</td>
+        </tr>
+        <tr>
+          <td>R-004813</td><td>12/08/26</td><td>201110622-0003</td><td>reversal</td>
+          <td class="num dr">−520.00</td><td>GS</td><td class="muted-cell">reverses R-004812</td>
+        </tr>
+        <tr>
+          <td>R-004814</td><td>12/08/26</td><td>201110622-0003</td><td>deposit_instalment</td>
+          <td class="num cr">+250.00</td><td>GS</td><td class="muted-cell">corrected amount</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The mistake stays visible, attributed and explained. That is the point — not a flaw to be tidied away.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2>How 110 columns become a real data model</h2>
+  </div>
+
+  <div class="transform">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Diagram: the 110-column master row becomes customer, account and ledger tables, from which balances are derived">
+      <defs>
+        <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <g font-family="ui-monospace, monospace" font-size="10" fill="currentColor">
+
+        <!-- TODAY -->
+        <text x="0" y="12" fill="var(--ink-faint)" letter-spacing="1.4">TODAY</text>
+        <rect x="0" y="26" width="196" height="150" fill="var(--surface)" stroke="var(--rule-strong)"/>
+        <text x="14" y="48" fill="var(--ink)" font-size="11">Master row</text>
+        <text x="14" y="64" fill="var(--ink-faint)">110 columns</text>
+        <g fill="var(--ink-soft)" font-size="10">
+          <text x="14" y="90">customer</text>
+          <text x="14" y="108">deposit</text>
+          <text x="14" y="126">FD</text>
+          <text x="14" y="144">loan</text>
+          <text x="14" y="162">scores</text>
+        </g>
+        <path d="M104 82 L128 82 L128 166 L104 166" fill="none" stroke="var(--rule-strong)"/>
+        <text x="136" y="120" fill="var(--red)" font-size="9">all in</text>
+        <text x="136" y="132" fill="var(--red)" font-size="9">one row</text>
+
+        <!-- arrow -->
+        <g color="var(--accent)">
+          <path d="M208 100 L246 100" stroke="currentColor" stroke-width="1.5" marker-end="url(#arw)"/>
+        </g>
+
+        <!-- TARGET -->
+        <text x="262" y="12" fill="var(--ink-faint)" letter-spacing="1.4">TARGET</text>
+
+        <rect x="262" y="26" width="128" height="44" fill="var(--surface)" stroke="var(--rule-strong)"/>
+        <text x="276" y="53" fill="var(--ink)" font-size="11">customer</text>
+
+        <g color="var(--rule-strong)">
+          <path d="M326 70 L326 96" stroke="currentColor" stroke-width="1"/>
+        </g>
+        <text x="334" y="87" fill="var(--ink-faint)" font-size="9">1 : n</text>
+
+        <rect x="262" y="96" width="128" height="44" fill="var(--surface)" stroke="var(--rule-strong)"/>
+        <text x="276" y="123" fill="var(--ink)" font-size="11">account</text>
+
+        <g color="var(--rule-strong)">
+          <path d="M326 140 L326 166" stroke="currentColor" stroke-width="1"/>
+        </g>
+        <text x="334" y="157" fill="var(--ink-faint)" font-size="9">1 : n</text>
+
+        <rect x="262" y="166" width="128" height="52" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="276" y="187" fill="var(--ink)" font-size="11">ledger_entry</text>
+        <text x="276" y="203" fill="var(--accent)" font-size="9">append-only</text>
+
+        <g color="var(--accent)">
+          <path d="M398 192 L438 192" stroke="currentColor" stroke-width="1.5" marker-end="url(#arw)"/>
+        </g>
+        <text x="404" y="184" fill="var(--ink-faint)" font-size="9">derives</text>
+
+        <rect x="450" y="166" width="150" height="52" fill="var(--surface)" stroke="var(--rule-strong)" stroke-dasharray="3 3"/>
+        <text x="464" y="187" fill="var(--ink)" font-size="11">account_balance</text>
+        <text x="464" y="203" fill="var(--ink-faint)" font-size="9">rebuildable projection</text>
+
+        <!-- annotations -->
+        <text x="620" y="120" fill="var(--ink-soft)" font-size="9.5">One customer,</text>
+        <text x="620" y="134" fill="var(--ink-soft)" font-size="9.5">many accounts.</text>
+        <text x="620" y="154" fill="var(--ink-soft)" font-size="9.5">Balances are summed,</text>
+        <text x="620" y="168" fill="var(--ink-soft)" font-size="9.5">never typed.</text>
+      </g>
+    </svg>
+  </div>
+
+  <p>The roughly forty computed columns in master do not become table columns. They become SQL views, so they can never disagree with the ledger.</p>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Master columns</th><th>Becomes</th></tr></thead>
+      <tbody>
+        <tr><td>Dep Total Received · Total Dep Bal · Dep Free Bal</td><td>Sum over ledger entries, less any lien</td></tr>
+        <tr><td>Loan Recovered · Gross Loan OS · Net Loan OS</td><td>Disbursal minus recovery</td></tr>
+        <tr><td>Loan EMI Paid · Due · Amt Due</td><td>Amortisation schedule compared against entries</td></tr>
+        <tr><td>Loan Arrear Days · Loan Status · NPA</td><td>Ageing view with a configurable NPA threshold</td></tr>
+        <tr><td>Current OD · OD Cap · OD Discount · Grace Days</td><td>Penalty engine driven by versioned product configuration</td></tr>
+        <tr><td>Credit Score · Grade · Consistency % · OD Ratio</td><td>Computed nightly and stored <em>with its date</em>, so score movement becomes visible</td></tr>
+        <tr><td>Prev Deposit Total till 25 · Prev Loan Recovered till 25</td><td>Opening-balance ledger entries at the migration cut-off</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Products are versioned by date, so when you change the FD rate next year, existing deposits keep the rate they were opened under. A spreadsheet cannot do this, and it is essential for correctness.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <h2>Two things the field work demands</h2>
+  </div>
+
+  <h3>The collection app must work with no signal at all</h3>
+  <p>Officers collect at doorsteps in Khosalpur, Aranghata, Jugolbari, Narayanpur, Babupara, Shikri and Nimtala. An app that needs connectivity to record a collection will fail at the exact moment cash changes hands — and staff will fall back to a paper notebook, recreating the merge problem you are trying to escape.</p>
+
+  <p>So the app pre-loads the officer's whole round each morning on office Wi-Fi, records collections into a local queue with no network, issues the member a receipt immediately from a reserved number block, and syncs when it can. The rule that makes this safe: <strong>a collection is only ever an append.</strong> An officer can add a receipt offline; an officer can never edit or delete one. Corrections are supervisor reversals made in the office. That restriction is precisely what allows conflict-free sync.</p>
+
+  <h3>Cash must be counted and reconciled every day</h3>
+  <p>This does not exist today and is the highest-value operational addition. At end of day the app shows the officer what the system says they collected. The officer enters the physical cash by denomination. If the two agree, they hand over and a supervisor accepts. If they differ, the difference is recorded as a named shortage or excess against that officer on that date — never silently absorbed.</p>
+
+  <p>Cash that is counted daily and reconciled to a receipt list is cash that cannot quietly leak. For a doorstep-collection lender, this is the single most important internal control there is.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <h2>Migrating to a reconciled zero</h2>
+  </div>
+
+  <p class="lede">Not "load the data and start using it" — load it, then prove that every member's balance in the new system equals their balance in the sheet, member by member, before anyone relies on it.</p>
+
+  <p>Zero unexplained differences. Not close enough. A migration that silently changes one member's balance destroys trust that took years to build, and in a doorstep business trust <em>is</em> the business.</p>
+
+  <p>The recommendation is to migrate <strong>opening balances at a cut-off date</strong> rather than reconstructing full history at go-live: fast, low-risk, and reconciliation becomes a single number per account. Historical transactions can be back-loaded from <code>Collection_Abstract</code> afterwards as a non-blocking improvement, rather than as a launch risk. The old sheets are then frozen read-only — kept as archive, never deleted, and never editable again.</p>
+
+  <p>Both systems run in parallel for one full collection cycle, because the daily and weekly frequencies both need to complete. Daily totals are compared each evening and every difference investigated same-day. It is double work for a month, and it is the cheapest insurance available.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <h2>Sequence</h2>
+  </div>
+
+  <p>Ordered so the highest-risk, highest-value change — collections stop being merged by hand — happens as early as possible.</p>
+
+  <ol class="phases">
+    <li class="phase">
+      <span class="phase-id">Phase 0</span>
+      <span class="phase-name">Decide and prepare<span>Answer the open questions, profile the data, confirm compliance thresholds</span></span>
+      <span class="phase-dur">1–2 weeks</span>
+    </li>
+    <li class="phase">
+      <span class="phase-id">Phase 1</span>
+      <span class="phase-name">Foundation<span>Schema, constraints, auth, migration scripts and the reconciliation harness</span></span>
+      <span class="phase-dur">3–4 weeks</span>
+    </li>
+    <li class="phase">
+      <span class="phase-id">Phase 2</span>
+      <span class="phase-name">Collection app — the core of the project<span>Offline PWA, receipts, day-book, piloted with one officer first</span></span>
+      <span class="phase-dur">4–5 weeks</span>
+    </li>
+    <li class="phase">
+      <span class="phase-id">Phase 3</span>
+      <span class="phase-name">Office app<span>Onboarding, loan origination, reversals, reports, member statements</span></span>
+      <span class="phase-dur">4–5 weeks</span>
+    </li>
+    <li class="phase">
+      <span class="phase-id">Phase 4</span>
+      <span class="phase-name">Automation<span>Interest accrual, penalties, NPA ageing, re-scoring, WhatsApp reminders</span></span>
+      <span class="phase-dur">2–3 weeks</span>
+    </li>
+    <li class="phase">
+      <span class="phase-id">Phase 5</span>
+      <span class="phase-name">Parallel run and cutover<span>Bounded by a real collection cycle, not by effort — cannot be compressed</span></span>
+      <span class="phase-dur">4–5 weeks</span>
+    </li>
+  </ol>
+
+  <p>Roughly <strong>five to seven months</strong> to full cutover with a small team working steadily. Recurring infrastructure cost at this scale is small — tens of dollars a month for managed Postgres and hosting. The real cost is development time, and the real saving is the hours now spent merging workspaces and hunting differences, plus the losses that daily cash reconciliation prevents.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <h2>What I need from you before Phase 1</h2>
+  </div>
+
+  <p>Fifteen questions are listed in the repository. These four change the design most:</p>
+
+  <ol class="questions">
+    <li><strong>Where will you be in three years?</strong> At ~200 members almost any design works. At 5,000 across multiple branches, branch-scoping has to be in the schema from day one rather than retrofitted.</li>
+    <li><strong>What is <code>Collection_Abstract</code>?</strong> It is your largest file. If it holds clean transaction-level history it is the key to full history and to validating the migration. If it is a derived summary, its role is much smaller.</li>
+    <li><strong>Opening balances, or full history?</strong> Fast and low-risk, versus complete and slower. My recommendation is opening balances now, back-load later.</li>
+    <li><strong>What are the actual rules?</strong> The interest, overdue-capping and credit-scoring logic lives in formulas and in your head. It needs to be stated plainly before it can be encoded — deposit accrual, what triggers an accrual reversal, the overdue rate and cap, who may grant a discount and up to what limit, and exactly when a loan becomes NPA.</li>
+  </ol>
+</section>
+
+<footer>
+  <span>Unnayan Nidhi · core banking conversion plan</span>
+  <span>Planning stage — no application code written</span>
+</footer>
+
+</div>
