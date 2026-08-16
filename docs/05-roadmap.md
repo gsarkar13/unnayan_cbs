@@ -6,14 +6,22 @@ the thing it depends on.
 
 ## Phase 0 — Decide and prepare (1–2 weeks)
 
-- Confirm the open questions in [§6](06-open-questions.md).
-- Choose cut-off date and opening-balance approach.
+- **Retrieve and read the Apps Script.** It holds the OD, accrued-interest and
+  staff-aggregation logic and is invisible to every export. Highest-value task
+  in the project; most of the rules questions may already be answered inside it.
+- Investigate the `Data_fV` reconciliation failure (copied vs. IMPORTRANGE
+  totals ₹400 apart, one returning `#VALUE!`) before those figures are carried
+  forward as opening balances.
+- Establish the true member count and reconcile the two customer ID schemes.
+- Confirm the remaining open questions in [§6](06-open-questions.md).
+- Choose cut-off date; confirm the opening-balance approach.
 - Run the data-quality profile on all 13 live sheets; fix in-sheet what is
   cheaper to fix there.
 - Stand up staging Postgres, repo, CI.
 - Get the Nidhi compliance thresholds confirmed in writing by your auditor.
 
-**Exit:** decisions written down; profile report reviewed.
+**Exit:** the Apps Script is in this repository and understood; the existing
+reconciliation gap is explained; decisions written down.
 
 ## Phase 1 — Foundation (3–4 weeks)
 
@@ -27,6 +35,11 @@ the thing it depends on.
 ## Phase 2 — Collection app (4–5 weeks) — *the core of the project*
 
 - Offline-first PWA: today's round, collect, offline receipt, sync queue.
+- **Round sorted by visit order**, carried over from `Visting Order` — this is
+  how officers actually walk their day, and losing it would make the app
+  slower than the spreadsheet it replaces.
+- **Follow-up capture**: reason and promised date when a member doesn't pay,
+  surfaced on the next visit. Controlled reason list, Bengali and English.
 - Receipt-block allocation for offline numbering.
 - Day-book: denomination count, variance, supervisor acceptance.
 - Bengali/English toggle throughout.
@@ -38,7 +51,15 @@ balancing daily.
 ## Phase 3 — Office app (4–5 weeks)
 
 - Member onboarding with KYC capture; account opening (RD, FD, loan).
-- Loan origination: application → sanction → disbursal, with approval limits.
+- Loan origination: application → sanction → disbursal, with approval limits,
+  document verification and denial/rejection tracking — mirroring the existing
+  `USLAPP` application register rather than inventing a new pipeline.
+- **Loan regeneration (restructuring)** as a first-class approved workflow,
+  implementing the documented `Regenerate logic` algorithm.
+- **Gold loan collateral** — weight, purity, valuation, storage, release —
+  if that product is confirmed active.
+- **Staff targets and incentive calculation** driven from the ledger, since
+  officers appear to be paid on these figures.
 - Reversal/adjustment workflow with reasons and approval.
 - Core reports: day-book, collection sheet, arrears ageing, portfolio, member
   statement, officer performance.

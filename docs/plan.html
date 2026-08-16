@@ -410,7 +410,7 @@
   <div class="masthead-meta">
     <span>Planning stage · no code written</span>
     <span>Read from the live Drive folder, 16 Aug 2026</span>
-    <span>~208 members · 110 columns · 11 officers</span>
+    <span>13 live sheets · 110 columns · 6 active officers</span>
   </div>
 </header>
 
@@ -430,7 +430,7 @@
       <tbody>
         <tr><td>UNNAYAN_CORE_MASTER</td><td>1.6 MB</td><td>The book of record — one row per customer, 110 columns</td></tr>
         <tr><td>Collection_Abstract</td><td>3.0 MB</td><td>The largest file in the system — collection history</td></tr>
-        <tr><td>11 × *_Collection_Workspace</td><td>~230–410 KB each</td><td>One forked workspace per officer: GS, CS, RS, MS, KM, CD, RG, SDS, S2, S3, AG</td></tr>
+        <tr><td>11 × *_Collection_Workspace</td><td>~230–410 KB each</td><td>One forked workspace per officer — six of them belong to currently active staff</td></tr>
         <tr><td>6 × "Copy of ... backup"</td><td>various</td><td>Dated manual snapshots, Feb–Apr 2026 — serving as version control</td></tr>
       </tbody>
     </table>
@@ -440,10 +440,32 @@
 
   <p>The last one is named <code>Copy of UNNAYAN_CORE_MASTER for DB</code>. The intent to move to a database is already there. This is the route.</p>
 
+  <p>And the file set is rebuilt from scratch every year. There are 2024, 2025 and current generations — 36 spreadsheets in all, with each year's structure recreated and the previous year frozen as archive. A database has no year boundary; you query a date range. That annual overhead simply stops.</p>
+
+  <h3>Three findings that shape everything below</h3>
+
+  <div class="evidence">
+    <span class="label">Finding one · there are no transactions</span>
+    <p>Neither the 3 MB abstract nor the staff workspaces contain a single transaction-level row. Both are <strong>customer × date matrices</strong> — rows are customers, columns are days, and the repeating column pair is <code>DD</code> and <code>EMI</code>. The atomic fact is a <em>cell</em>, not a row. Two payments on the same day are already collapsed into one figure, some daily totals are negative because they are net movements rather than receipts, and <strong>no receipt number, timestamp, payment mode or collector attribution exists on any amount anywhere in the system.</strong></p>
+  </div>
+
+  <div class="evidence">
+    <span class="label">Finding two · an Apps Script holds your business rules</span>
+    <p>A README embedded in the workspace states that a Google Apps Script performs <em>loan OD calculation (cross-year)</em>, <em>deposit accrued interest calculation</em> and <em>staff performance aggregation</em> — and warns that changes can break "OD accuracy, accrued interest, audit trail, historical reconciliation". That code is invisible to every export. It is the authoritative version of your rules, and retrieving it is the first task of the project.</p>
+  </div>
+
+  <div class="evidence">
+    <span class="label">Finding three · a reconciliation is already failing</span>
+    <p>The workspace compares copied values against live-imported values of the same 2023 master figures. Loan recovered: <strong>12,54,171 against 12,53,771</strong> — ₹400 apart. Total deposit: 23,02,685 against <code>#VALUE!</code>. Individual rows differ by tens of thousands, and a <code>#REF!</code> sits in the reference index. Two views of the same history already disagree, the disagreement is recorded in the file, and nothing escalates it.</p>
+  </div>
+
   <div class="keep">
     <span class="label">Worth saying plainly</span>
-    <p>The domain logic in that master sheet is genuinely good — arrears ageing, overdue-interest capping with grace days and discounts, NPA classification, a two-axis credit grade with consistency percentages. <strong>None of it is being discarded.</strong> The problem is not the thinking. It is that a spreadsheet cannot enforce the thinking, cannot hold more than one loan per member, and cannot tell you who took the cash.</p>
+    <p>The domain logic here is genuinely good — arrears ageing, overdue-interest capping with grace days and discounts, NPA classification, a two-axis credit grade, a fully worked loan-restructuring algorithm, and a real product rate card covering recurring deposits from 6% to 9.25%, group and daily loans, and gold lending. <strong>None of it is being discarded.</strong> The problem is not the thinking. It is that a spreadsheet cannot enforce the thinking, cannot hold more than one loan per member, and cannot tell you who took the cash.</p>
   </div>
+
+  <h3>Four things the business does that the master sheet never showed</h3>
+  <p>Reading a staff workspace surfaced whole features the 110 columns don't hint at, all of which need to be in scope: <strong>loan regeneration</strong>, a documented algorithm for restructuring a defaulting loan against the member's deposit balance; <strong>follow-up and promise-to-pay</strong>, recording why a member didn't pay and when they said they would; <strong>route sequencing</strong>, the visit order by which an officer actually walks their day; and <strong>gold lending</strong> at roughly ₹7,000 per gram, which appears nowhere in the master's columns.</p>
 </section>
 
 <section>
@@ -665,7 +687,9 @@
 
   <p>Zero unexplained differences. Not close enough. A migration that silently changes one member's balance destroys trust that took years to build, and in a doorstep business trust <em>is</em> the business.</p>
 
-  <p>The recommendation is to migrate <strong>opening balances at a cut-off date</strong> rather than reconstructing full history at go-live: fast, low-risk, and reconciliation becomes a single number per account. Historical transactions can be back-loaded from <code>Collection_Abstract</code> afterwards as a non-blocking improvement, rather than as a launch risk. The old sheets are then frozen read-only — kept as archive, never deleted, and never editable again.</p>
+  <p>Migrate <strong>opening balances at a cut-off date</strong>. Reconstructing full transaction history is not an option that exists: since no receipt, timestamp, mode or collector was ever recorded, the most that could be recovered from any file is daily per-customer subtotals. Those are worth loading as a read-only archive for trend reporting — but they are not transactions and must never be mistaken for them. The old sheets are then frozen read-only: kept as archive, never deleted, never editable again.</p>
+
+  <p>Two things happen before any of this. The Apps Script is retrieved and read, because it produced the figures being migrated. And the existing ₹400 reconciliation gap is explained, because the same divergence may be sitting inside the opening balances you are about to carry forward.</p>
 
   <p>Both systems run in parallel for one full collection cycle, because the daily and weekly frequencies both need to complete. Daily totals are compared each evening and every difference investigated same-day. It is double work for a month, and it is the cheapest insurance available.</p>
 </section>
@@ -681,7 +705,7 @@
   <ol class="phases">
     <li class="phase">
       <span class="phase-id">Phase 0</span>
-      <span class="phase-name">Decide and prepare<span>Answer the open questions, profile the data, confirm compliance thresholds</span></span>
+      <span class="phase-name">Decide and prepare<span>Retrieve and read the Apps Script, explain the existing reconciliation gap, profile the data</span></span>
       <span class="phase-dur">1–2 weeks</span>
     </li>
     <li class="phase">
@@ -720,14 +744,20 @@
     <h2>What I need from you before Phase 1</h2>
   </div>
 
-  <p>Fifteen questions are listed in the repository. These four change the design most:</p>
+  <p>Seventeen questions are listed in the repository, and three from the first draft have already been answered by reading the files. These five are what I need from you:</p>
 
   <ol class="questions">
-    <li><strong>Where will you be in three years?</strong> At ~200 members almost any design works. At 5,000 across multiple branches, branch-scoping has to be in the schema from day one rather than retrofitted.</li>
-    <li><strong>What is <code>Collection_Abstract</code>?</strong> It is your largest file. If it holds clean transaction-level history it is the key to full history and to validating the migration. If it is a derived summary, its role is much smaller.</li>
-    <li><strong>Opening balances, or full history?</strong> Fast and low-risk, versus complete and slower. My recommendation is opening balances now, back-load later.</li>
-    <li><strong>What are the actual rules?</strong> The interest, overdue-capping and credit-scoring logic lives in formulas and in your head. It needs to be stated plainly before it can be encoded — deposit accrual, what triggers an accrual reversal, the overdue rate and cap, who may grant a discount and up to what limit, and exactly when a loan becomes NPA.</li>
+    <li><strong>Send me the Apps Script.</strong> Extensions → Apps Script, in any collection workspace. It holds your OD and accrued-interest logic and may answer several of the questions below on its own. This is a task, not a question, and it is the first thing to do.</li>
+    <li><strong>How many members do you actually have?</strong> The master's numbered rows suggested around 208, but one officer's workspace alone carries 604 named customers, and the abstract references member numbers up to 1843. The answer decides whether branch-scoping goes into the schema from day one.</li>
+    <li><strong>Which customer ID is authoritative?</strong> Two schemes coexist — <code>1-010123-0001</code> in the master and <code>UNB00348</code> in the loan register — plus bare member numbers elsewhere. Identity is what everything else hangs from, so this has to be settled before migration.</li>
+    <li><strong>Is gold lending active?</strong> It is priced on the rate card but absent from the master's columns. If it is live it needs collateral tracking — weight, purity, valuation, storage, release — which is a real addition to the office app.</li>
+    <li><strong>What are the mechanics behind the rates?</strong> The rate card gives prices. It does not say when deposit interest accrues, what triggers an accrual reversal, the overdue rate and its cap, who may grant a discount and up to what limit, or exactly when a loan becomes NPA.</li>
   </ol>
+
+  <div class="keep">
+    <span class="label">Already answered by inspection</span>
+    <p>Six officers are active — Gobinda Sarkar, Minati Sarkar, Chumki Sadhukhan, Rajesh Sadhukhan, Champa Rani Das and Krishna Mondal. Two more are marked closed, two are inactive, and one "officer" is a system file. Eleven further staff are listed as previously closed, so turnover is routine: the system must reassign accounts while keeping history attributed to whoever actually collected it. Customers are also shared between officers, which is why account assignment became its own dated table rather than a single column.</p>
+  </div>
 </section>
 
 <footer>

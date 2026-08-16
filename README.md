@@ -9,17 +9,35 @@ from you before implementation can start.
 
 ## The situation
 
-Thirteen live Google Sheets run the business: one `UNNAYAN_CORE_MASTER` with
-~208 customers across 110 columns, eleven per-officer collection workspaces,
-and a 3 MB `Collection_Abstract`. Officers work in their own file and the data
-is merged back to master by hand. Six dated `Copy of UNNAYAN_CORE_MASTER`
-files serve as version control.
+Thirteen live Google Sheets run the business: `UNNAYAN_CORE_MASTER` with 110
+columns per customer, per-officer collection workspaces for six active
+officers, and a 3 MB `Collection_Abstract`. Six dated
+`Copy of UNNAYAN_CORE_MASTER` files serve as version control, and the whole
+file set is **recreated from scratch every year** — there are 2024, 2025 and
+current generations, 36 spreadsheets in all.
 
-The domain logic in that master sheet is genuinely good — arrears ageing,
-overdue-interest capping with grace days and discounts, NPA classification, a
-two-axis credit grade. **None of it is being discarded.** The problem is not
-the thinking; it is that a spreadsheet cannot enforce the thinking, cannot
-hold more than one loan per member, and cannot tell you who took the cash.
+The domain logic is genuinely good — arrears ageing, overdue-interest capping
+with grace days and discounts, NPA classification, a two-axis credit grade, a
+worked loan-restructuring algorithm, a full product rate card. **None of it is
+being discarded.** The problem is not the thinking; it is that a spreadsheet
+cannot enforce the thinking, cannot hold more than one loan per member, and
+cannot tell you who took the cash.
+
+Three findings from reading the live files shape the plan:
+
+- **There is no transaction anywhere in the system.** Both the abstract and
+  the staff workspaces are customer × date matrices whose atomic fact is a
+  *cell*. No receipt number, timestamp, payment mode or collector attribution
+  exists on any amount. Full-history migration is therefore impossible — the
+  information was never captured.
+- **An Apps Script holds your business rules.** Its own README says it performs
+  loan OD calculation, deposit accrued-interest calculation and staff
+  performance aggregation. It is invisible to every export. Retrieving it is
+  the first task of the project.
+- **A reconciliation is already failing in your data.** `Data_fV` compares
+  copied against IMPORTRANGE values of the same 2023 figures; the loan-recovered
+  totals sit ₹400 apart, the deposit total returns `#VALUE!`, and individual
+  rows differ by tens of thousands. Nothing escalates it.
 
 ## The core idea
 
@@ -65,7 +83,13 @@ auth · India-region hosting · existing WhatsApp Business API for notifications
 
 ## What happens next
 
-Read the documents, then answer [§6](docs/06-open-questions.md). The four that
-matter most: your growth expectation, what `Collection_Abstract` actually
-contains, whether to migrate opening balances or full history, and the written
-rules behind the interest, penalty and credit-scoring formulas.
+**First: send me the Apps Script.** Open Extensions → Apps Script in one of the
+collection workspaces and share the code. It is the authoritative version of
+your OD and interest rules, and it may answer several of the open questions on
+its own.
+
+Then read the documents and answer [§6](docs/06-open-questions.md). Beyond the
+script, the ones that matter most are your true member count, which of the two
+customer ID schemes is authoritative, whether gold lending is an active
+product, and the mechanics behind the interest, penalty and credit-scoring
+rules.

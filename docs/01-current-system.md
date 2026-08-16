@@ -45,6 +45,212 @@ has ever been in should be reconstructible from its ledger.
 The last one is named `for DB`. The intent to move to a database is already
 there; this plan is the route.
 
+## 1.1a What `Collection_Abstract` actually is
+
+The largest file in the system (3 MB) turns out to hold **eight tabs, and not
+one transaction-level row among them.** This matters enormously for migration,
+so it is worth being precise.
+
+| Tab | One row = | Coverage |
+|---|---|---|
+| `Associate Collection` | one source file / associate | daily totals, all of 2026, populated to 15 Aug |
+| *(loan register)* | one **loan application** | Sep 2021 – Oct 2022, 116 applications |
+| *(M Daily Collection)* | one **customer** | daily `DD`/`EMI` pairs, Jan–May 2026 |
+| *(2025 variant)* | one customer | 2025, rendered all zeros |
+| *(monthly summary)* | one associate × one month | November 2022 |
+| `Data` | one associate | the staff registry — see below |
+| *(scratch)* | one member | ad-hoc loan pricing and incentive workings |
+| `January Travel SDS` | one day of travel | odometer/fuel log for one officer |
+
+The three big tabs are **matrices, not ledgers**: rows are customers, columns
+are days, and the repeating column pair is `DD | EMI` — daily deposit and loan
+instalment. The atomic fact is a *cell*, not a row: **(customer × date ×
+DD-or-EMI) → amount**. Two payments on the same day are already collapsed into
+one figure. Some daily totals are negative (`-47070`, `-61300`), which means
+these are **net movements** — collections minus withdrawals — not gross
+receipts.
+
+**There is no receipt number, transaction ID, timestamp or collector
+attribution on any amount cell anywhere in the file.** That is the single
+biggest audit gap in the current system, and it is the thing the new ledger
+exists to close.
+
+The tab totals do reconcile cleanly, which is a good sign for data quality:
+for 01/01/26, `40 + 11,350 = 11,390`; for 02/01/26, `11,870 + 18,110 =
+29,980`. The per-customer matrix rolls up exactly to the house totals.
+
+## 1.1b Two findings that change the picture
+
+**There is already an Apps Script doing the merge.** A note preserved in the
+abstract reads, verbatim:
+
+> `Note for S5, previously used, before script: Data_fV!j4:j13 has spreadsheet ID of file2, each file for each staff, to accumulate from all staff file2 data to this sheet`
+
+So the accumulation from staff workspaces was originally formula-driven and
+has since been scripted. The merge is partly automated already — which means
+the migration is not "introduce automation" but "replace a fragile automation
+with a system that cannot lose or double-count."
+
+**The whole file set is rebuilt every year.** The `Data` tab carries three
+parallel rosters — current, `2025`, and `2024` — each with its own set of
+per-staff spreadsheet IDs, 36 distinct files in total, plus `Master Sheet 24`,
+`Master Sheet 25` and `Market Sort 24`. Every year the structure is recreated
+and the previous year becomes a frozen archive.
+
+This is the clearest possible argument for the migration. A database has no
+year boundary; you query a date range. Annual re-creation is pure overhead
+that also fragments history across dozens of files, and it stops entirely
+once the ledger exists.
+
+## 1.1c The real staff roster
+
+The `Data` tab is the authoritative roster, and it corrects an assumption
+worth stating plainly: **there are six active collection officers, not
+eleven.**
+
+| Code | Officer | Status |
+|---|---|---|
+| GS | Gobinda Sarkar | Active |
+| MS | Minati Sarkar | Active |
+| CS | Chumki Sadhukhan | Active |
+| RS | Rajesh Sadhukhan | Active |
+| CD | Champa Rani Das | Active |
+| KM | Krishna Mondal | Active |
+| SDS | Soma Dutta Sikdar | **Closed** |
+| RG | Roki Ghosh | **Closed** |
+| S2, S3 | — | **Inactive** |
+| AG | `AG_Daily_Workspace` | System, not a person |
+
+This explains the stale workspaces noted below: `SDS`, `RG`, `S2` and `S3`
+have not been modified in months because those officers have left or their
+slots are dormant. The roster also carries per-officer targets
+(`Monthly New Account target`, `New loan disburse amount target`) and a list
+of eleven previously-closed staff — so officer turnover is a normal event the
+new system must handle gracefully, with accounts reassigned and history
+retained under the officer who actually collected it.
+
+## 1.1d Inside a staff workspace — and the Apps Script nobody has read
+
+`GS_Collection_Workspace` has eight tabs, and two of them change this project's
+risk profile.
+
+| Tab | What it is |
+|---|---|
+| `GS_Collection` | The officer's working grid — 900 rows × 750 columns |
+| `Remark` | Scratch pad (17 `#VALUE!` errors sitting in it) |
+| `Regenerate logic` | A loan-restructuring calculator — see §1.1e |
+| `Daily_Ledger_Buffer` | The same grid again; the write-back staging layer for the merge |
+| `Deposit & Loan Plan` | The product rate card — see §1.1e |
+| `Data_fV` | The cross-file reference index |
+| `Followup` / `Copy of Followup` | Promise-to-pay tracking — see §1.1e |
+
+The collection grid is **one row per customer, one column per (date ×
+product type)** — 366 days of 2026 × 2, columns S to ACA, headers alternating
+`DD` and `EMI`. So a cell is *(customer, date, deposit-or-EMI) → amount*. It
+cannot hold a time, a receipt number, who accepted the cash, or a payment mode.
+Two payments on the same day collapse into one figure.
+
+### The Apps Script is the real system of record for your business rules
+
+`Data_fV` carries an embedded README written by whoever built this. Verbatim,
+in part:
+
+> ```
+> README – data_fV (DO NOT MODIFY)
+> This sheet is a SYSTEM REFERENCE INDEX.
+> • Used by Apps Script for:
+>   – Loan OD calculation (cross-year)
+>   – Deposit accrued interest calculation
+>   – Staff performance aggregation
+> • Sheet formulas must NEVER directly depend on data_fV
+> • Only Apps Script is allowed to read this sheet
+> Any change here can break:
+> • OD accuracy  • Accrued interest  • Audit trail  • Historical reconciliation
+> ```
+
+This is the most important artefact in the entire system. It means the
+overdue-interest and accrued-interest logic — the rules I listed as an open
+question — **already exist as code**, in Google Apps Script, and that code is
+not visible in any spreadsheet export.
+
+**Retrieving that script is now a prerequisite for Phase 0.** It is the
+authoritative statement of your business rules, and reimplementing them from
+guesswork when a correct implementation already exists would be both wasteful
+and dangerous.
+
+### A reconciliation that is already failing, in your live data
+
+`Data_fV` columns W–Z compare, per customer, the **copied value** against the
+**IMPORTRANGE value** of the same 2023 master figures. The grand totals:
+
+| Measure | Copied | IMPORTRANGE | Difference |
+|---|---|---|---|
+| Loan Recovered | 12,54,171 | 12,53,771 | **₹400** |
+| Total Deposit | 23,02,685 | `#VALUE!` | **broken** |
+
+And per-row the drift is much worse — one row reads `6,600` against `27,232`,
+another `22,700` against `41,401`, another `0` against `-2,020`. There is also
+a `#REF!` in `Data_fV!J19`, the signature of a broken IMPORTRANGE.
+
+This is not a hypothetical risk. Two views of the same historical figures
+already disagree, the disagreement is recorded in the file, and nothing
+escalates it. It is the strongest possible argument for a single derived
+source of truth.
+
+## 1.1e Four things the business does that the master sheet never showed
+
+Reading the workspace surfaced whole features that the 110 columns don't hint
+at. All four need to be in scope.
+
+**A product rate card that already exists.** `Deposit & Loan Plan` holds real,
+current pricing — recurring deposits at 8.25% (1 yr), 9.25% (2 yr), 6% (3, 5
+and 7 yr), a monthly RD at 6.2% plus a 1% maturity bonus with a 6-month lock
+and interest only on maturity. On the lending side: group loans over 35 weeks,
+daily-loan tables, processing fees of 3.50% on daily and group loans and 2% on
+**gold loans at approximately ₹7,000/gram** — and gold lending appears nowhere
+in the master's 110 columns. Effective rates on some products run to 59.43%.
+This card is the direct input to the `product` table.
+
+**Loan regeneration (restructuring).** The `Regenerate logic` tab is a fully
+worked calculator: daily interest rate 0.002, days elapsed, EMIs paid, gap
+days as arrears, arrears interest, extension days and extension interest,
+adjusted payable, new tenure. It restructures a defaulting loan against the
+member's deposit balance. This is a real, recurring business process with a
+documented algorithm, and the plan needs a first-class restructuring workflow
+rather than treating it as an adjustment.
+
+**Follow-up and promise-to-pay.** The `Followup` tabs mirror the collection
+grid but pair `Reason` with `EDate` per day — recording why a member didn't
+pay and when they promised to. That is a collections workflow, and it belongs
+in the field app so an officer sees the promise on their next visit.
+
+**Route sequencing.** `Visting Order` and `Visting Order 2` (misspelling
+verbatim) order each officer's round. The field app must preserve this — it is
+how an officer actually walks their day.
+
+## 1.1f Two corrections to earlier assumptions
+
+**The member base is larger than the master suggests.** The GS workspace alone
+carries `Sr No` 1–900 with **604 named customers**, and the abstract's scratch
+tab references member numbers up to 1843 against a separate `UNB#####` ID
+scheme (`UNB00348`, `UNB01203`) that coexists with the `1-010123-0001` scheme.
+The ~208 figure from the master's numbered rows is not the true member count,
+and the two identifier schemes need reconciling during migration.
+
+**Customers are shared between officers.** `Coll Officer` holds values like
+`CS, RS, KM`, `CS, SDS` and `RS, KM` — a single customer collected by several
+officers. The data model must therefore support **many officers per account**,
+not the single `assigned_officer_id` foreign key sketched in §3. That is
+corrected in the data-model document.
+
+The same field also carries at least **40 distinct free-text values** mixing
+four different dimensions: officer (`GS`), officer pairs (`SD/CS`), lifecycle
+status (`Closed`, `SDS Pause`, `NPA, All`, `SC Close`), and notification
+channel (`Mixed GS SMS/CS`, `RS SMS`). `Data_fV` maintains an informal
+hand-kept list of them, which is the best available starting point for
+splitting that one field into the three or four real dimensions it is doing
+the work of.
+
 ## 1.2 The master sheet's 110 columns
 
 The `Master` tab carries **~208 customers** across **110 columns**. Grouped by

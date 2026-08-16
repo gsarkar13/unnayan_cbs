@@ -144,6 +144,77 @@ Denominations as a child table. This is the cash control from §2.5.
 Every mutation: actor, role, action, table, record, before/after JSON, IP,
 timestamp. Append-only. Retained for the full statutory period.
 
+### `account_officer` — corrected: many officers per account
+
+The live data shows `Coll Officer` values like `CS, RS, KM` and `CS, SDS` — a
+single customer collected by several officers. A single
+`account.assigned_officer_id` cannot represent that, so assignment becomes its
+own table:
+
+`account_id`, `officer_id`, `role` (`primary` | `secondary` | `covering`),
+`effective_from`, `effective_to`.
+
+Dating the assignment matters as much as allowing several. Officers leave —
+the roster lists eleven closed staff — and when they do, **history must stay
+attributed to whoever actually collected it** while the *current* assignment
+moves on. A dated join table gives you both; a column on the account gives you
+neither.
+
+Row-level security then keys off "is there a live `account_officer` row for
+me", rather than an equality check on one column.
+
+### `loan_restructure` — the "regeneration" workflow
+
+The `Regenerate logic` tab is a documented algorithm for restructuring a
+defaulting loan against the member's deposit balance. It deserves a real
+workflow, not an untracked adjustment:
+
+`loan_account_id`, `requested_on`, `regeneration_date`, `old_emi`,
+`new_emi`, `old_tenure`, `new_tenure_days`, `gap_days`, `arrears_interest`,
+`extension_days`, `extension_interest`, `adjusted_payable`,
+`deposit_applied`, `approved_by`, `approved_on`, `status`.
+
+Approval is required, and the resulting change posts as ledger entries — so a
+restructuring is visible in the member's history rather than silently
+rewriting their schedule.
+
+### `followup` — promise-to-pay
+
+The `Followup` tabs pair a `Reason` with an `EDate` per customer per day. That
+is a collections workflow and belongs in the field app, so an officer arrives
+already knowing what was promised last time:
+
+`account_id`, `officer_id`, `contact_date`, `reason_code`, `notes`,
+`promised_date`, `promised_amount`, `outcome`.
+
+`reason_code` should be a controlled list in Bengali and English — the
+free-text version is what produced 40 unmanaged values in `Coll Officer`.
+
+### `visit_route` — the officer's round
+
+`Visting Order` and `Visting Order 2` sequence each officer's day. Preserve
+them as `account_officer.visit_order` plus an optional alternate sequence, and
+sort the field app's round by it. This is how officers actually walk their
+route; losing it would make the app slower than the spreadsheet.
+
+### `staff_target` and `staff_incentive`
+
+The roster carries `Monthly New Account target` and `New loan disburse amount
+target` per officer, and the abstract computes commission at 2% of deposits
+collected, gated `Payable` / `Not Payable`, alongside Bengali incentive notes
+about collection thresholds and per-account bonuses. If officers are paid on
+these numbers, the numbers must come from the ledger rather than a scratch
+tab — otherwise payroll depends on a spreadsheet nobody reconciles.
+
+### `loan_application` — the origination pipeline
+
+The abstract's loan register already tracks one row per application with
+`App. Date`, `Disb. Date`, `Disburse amount`, `Denied amount`,
+`Rejected Amount`, `Committment Date`, `Doc Clr Dt`, `Doc clr by` and
+`Verif. Date`, keyed by application numbers like `USLAPP00822`. That is a real
+origination pipeline with document verification, and it maps directly onto the
+Phase 3 sanction workflow. Keep the application-number scheme.
+
 ### Supporting tables
 
 `app_user` (staff, roles, officer codes GS/CS/RS/MS/KM/CD/RG/SDS/S2/S3/AG),

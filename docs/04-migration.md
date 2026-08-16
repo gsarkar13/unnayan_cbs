@@ -27,13 +27,56 @@ are real, individually-recorded entries.
 **Option B — reconstruct full transaction history** from `Collection_Abstract`
 and the workspace files.
 
-- Complete drill-down from day one.
-- Cost: much larger effort, and any gap in historical data becomes an
-  reconciliation failure that blocks go-live.
+**This option is now closed, and it is important to be clear about why.**
+Direct inspection of `Collection_Abstract` and of `GS_Collection_Workspace`
+found **no transaction-level rows anywhere in the system**. Both are matrices:
+rows are customers, columns are days, and each cell holds one amount for
+*(customer, date, deposit-or-EMI)*. Two payments on the same day are already
+collapsed into a single figure. No receipt number, timestamp, payment mode or
+collector attribution exists on any amount cell in any file.
 
-**Recommendation:** Option A for go-live. Then, if `Collection_Abstract`
-proves to hold clean transaction-level history, back-load it afterwards as
-pre-cut-off entries — a non-blocking improvement rather than a launch risk.
+So the most that could ever be recovered is **daily per-customer subtotals** —
+not transactions. The actor, the time and the mode were never recorded, and no
+amount of migration effort can retrieve information that was never captured.
+
+**Recommendation: Option A, and treat the daily subtotals as an archive.**
+Migrate opening balances at the cut-off. Separately, load the Jan–May 2026
+per-customer daily matrix and the 2026 house totals into a read-only
+`historical_daily_collection` table — useful for trend reporting and for
+validating the migration, but explicitly *not* part of the ledger, because
+they are not transactions and should never be mistaken for them.
+
+## 4.2a Prerequisite: retrieve the Apps Script
+
+Before any of this, extract and read the Google Apps Script attached to the
+workspaces. Its own README states it performs **loan OD calculation
+(cross-year)**, **deposit accrued interest calculation** and **staff
+performance aggregation**.
+
+That script is the authoritative statement of your business rules. It is not
+visible in any spreadsheet export, so it must be pulled from the Apps Script
+editor (Extensions → Apps Script) and committed to this repository. Until it
+has been read:
+
+- the interest and penalty rules cannot be correctly reimplemented;
+- the migration cannot be validated, because the figures it produced are the
+  figures being migrated;
+- nobody knows what else it does.
+
+This is the highest-value single task in Phase 0.
+
+## 4.2b A reconciliation that is already failing
+
+`Data_fV` in the staff workspace compares copied values against IMPORTRANGE
+values of the same 2023 master figures, and they disagree: loan recovered
+totals of 12,54,171 against 12,53,771 — **₹400 apart** — with the deposit
+total returning `#VALUE!`, individual rows differing by tens of thousands, and
+a `#REF!` sitting in `Data_fV!J19`.
+
+Investigate this **before** migrating, not after. Either the copied figures or
+the imported ones are wrong, and the same divergence may be embedded in the
+opening balances you are about to carry forward. Resolving it is part of
+earning the zero.
 
 ## 4.3 The pipeline
 
